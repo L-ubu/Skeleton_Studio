@@ -1,19 +1,12 @@
 import { useEffect } from "react";
 import { useStore } from "./store/useStore";
 import Toolbar from "./components/Toolbar/Toolbar";
+import BlockPalette from "./components/BlockPalette/BlockPalette";
+import FlowEditor from "./components/FlowEditor/FlowEditor";
+import PropertiesPanel from "./components/PropertiesPanel/PropertiesPanel";
 import ScratchLayout from "./components/layouts/ScratchLayout";
 import SplitLayout from "./components/layouts/SplitLayout";
 import CanvasLayout from "./components/layouts/CanvasLayout";
-
-function PlaceholderPalette() {
-  return <div className="p-4 text-gray-500 text-xs">Block palette goes here</div>;
-}
-function PlaceholderCanvas() {
-  return <div className="p-4 text-gray-500 text-xs">Flow canvas goes here</div>;
-}
-function PlaceholderProperties() {
-  return <div className="p-4 text-gray-500 text-xs">Properties panel goes here</div>;
-}
 
 export default function App() {
   const { layout, setEngineStatus, setCurrentFrame } = useStore();
@@ -32,10 +25,9 @@ export default function App() {
     return () => { cleanupEvents?.(); cleanupFrames?.(); };
   }, []);
 
-  const palette = <PlaceholderPalette />;
-  const canvas = <PlaceholderCanvas />;
-  const properties = <PlaceholderProperties />;
-
+  const palette = <BlockPalette />;
+  const canvas = <FlowEditor />;
+  const properties = <PropertiesPanel />;
   const Layout = layout === "scratch" ? ScratchLayout : layout === "split" ? SplitLayout : CanvasLayout;
 
   return (
