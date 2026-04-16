@@ -22,7 +22,7 @@ export default function BlockPalette() {
   return (
     <div className="p-3 space-y-4">
       {!selectedChainId && (
-        <p className="text-xs text-gray-500 italic">Select a chain first, then drag blocks here</p>
+        <p className="text-xs text-gray-500 italic">Select a chain first, then click blocks to add</p>
       )}
       {CATEGORY_ORDER.map((cat) => {
         const blocks = BLOCK_DEFINITIONS.filter((b) => b.category === cat);
