@@ -50,6 +50,13 @@ export default function Toolbar() {
         + New Chain
       </button>
 
+      <button onClick={() => useStore.getState().saveProject()} className="px-3 py-1 rounded bg-[#1a1a3a] border border-[#333] hover:border-blue-400 text-xs text-blue-400">
+        Save
+      </button>
+      <button onClick={() => useStore.getState().loadProject()} className="px-3 py-1 rounded bg-[#1a1a3a] border border-[#333] hover:border-blue-400 text-xs text-blue-400">
+        Load
+      </button>
+
       {/* Layout switcher */}
       <div className="flex rounded overflow-hidden border border-[#333]">
         {layouts.map(({ mode, label }) => (

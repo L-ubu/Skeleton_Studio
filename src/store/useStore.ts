@@ -25,6 +25,8 @@ interface StudioState {
   setEngineStatus: (status: Partial<EngineStatus>) => void;
   currentFrame: string | null;
   setCurrentFrame: (b64: string) => void;
+  saveProject: () => void;
+  loadProject: () => void;
 }
 
 export const useStore = create<StudioState>((set) => ({
@@ -82,4 +84,45 @@ export const useStore = create<StudioState>((set) => ({
 
   currentFrame: null,
   setCurrentFrame: (b64) => set({ currentFrame: b64 }),
+
+  saveProject: () => {
+    const state = useStore.getState();
+    const project = {
+      name: "My Setup",
+      version: 1,
+      chains: state.chains,
+      settings: { layout: state.layout },
+    };
+    const json = JSON.stringify(project, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "skeleton-studio-project.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+  loadProject: () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const project = JSON.parse(ev.target?.result as string);
+          useStore.setState({
+            chains: project.chains || [],
+            layout: project.settings?.layout || "scratch",
+          });
+        } catch (err) {
+          console.error("Failed to load project:", err);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  },
 }));
