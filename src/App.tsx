@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useStore } from "./store/useStore";
+import { chainsToEngineConfig } from "./utils/chainToConfig";
 import Toolbar from "./components/Toolbar/Toolbar";
 import BlockPalette from "./components/BlockPalette/BlockPalette";
 import FlowEditor from "./components/FlowEditor/FlowEditor";
@@ -9,7 +10,7 @@ import SplitLayout from "./components/layouts/SplitLayout";
 import CanvasLayout from "./components/layouts/CanvasLayout";
 
 export default function App() {
-  const { layout, setEngineStatus, setCurrentFrame } = useStore();
+  const { layout, chains, setEngineStatus, setCurrentFrame } = useStore();
 
   useEffect(() => {
     const cleanupEvents = window.electronAPI?.onEngineEvent((data) => {
@@ -24,6 +25,11 @@ export default function App() {
     });
     return () => { cleanupEvents?.(); cleanupFrames?.(); };
   }, []);
+
+  useEffect(() => {
+    const config = chainsToEngineConfig(chains);
+    window.electronAPI?.sendToEngine({ type: "config_update", config });
+  }, [chains]);
 
   const palette = <BlockPalette />;
   const canvas = <FlowEditor />;
