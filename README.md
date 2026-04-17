@@ -14,7 +14,7 @@
 
 <br>
 
-Built on top of [Skeleton Engine](https://github.com/L-ubu/Skaleton_Comand) (MediaPipe hand tracking + OpenCV).
+Built on top of [Skeleton Engine](https://github.com/L-ubu/Skeleton_Engine) (MediaPipe hand tracking + OpenCV).
 
 </div>
 
