@@ -36,25 +36,25 @@ Built on top of [Skeleton Engine](https://github.com/L-ubu/Skeleton_Engine) (Med
 ## Architecture
 
 ```
-┌─────────────────────────────────────┐
-│         Electron Main Process       │
-│  ┌──────────┐    ┌───────────────┐  │
-│  │  engine.ts│◄──►│  WebSocket    │  │
-│  │  (spawn)  │    │  Server :9150 │  │
-│  └──────────┘    └───────┬───────┘  │
-│                          │          │
-│  ┌───────────────────────▼───────┐  │
-│  │      Python Engine Process    │  │
-│  │  MediaPipe + OpenCV + Bridge  │  │
-│  │  (camera, tracking, actions)  │  │
-│  └───────────────────────────────┘  │
-│                                     │
-│  ┌───────────────────────────────┐  │
-│  │     React UI (Renderer)       │  │
-│  │  Flow Editor + Block Palette  │  │
-│  │  Properties + Webcam Viewer   │  │
-│  └───────────────────────────────┘  │
-└─────────────────────────────────────┘
++-------------------------------------+
+|         Electron Main Process       |
+|  +----------+    +---------------+  |
+|  | engine.ts|<-->| WebSocket     |  |
+|  | (spawn)  |    | Server :9150  |  |
+|  +----------+    +-------+-------+  |
+|                          |          |
+|  +---------- ------------v-------+  |
+|  |      Python Engine Process    |  |
+|  |  MediaPipe + OpenCV + Bridge  |  |
+|  |  (camera, tracking, actions)  |  |
+|  +-------------------------------+  |
+|                                     |
+|  +-------------------------------+  |
+|  |     React UI (Renderer)       |  |
+|  |  Flow Editor + Block Palette  |  |
+|  |  Properties + Webcam Viewer   |  |
+|  +-------------------------------+  |
++-------------------------------------+
 ```
 
 ## Getting Started
