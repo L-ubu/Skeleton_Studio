@@ -53,7 +53,11 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   { id: "keypress", category: "action", label: "Keypress", color: "#ffd700", icon: "\u2328\ufe0f", defaultProps: { keys: "" } },
   { id: "mouse_click", category: "action", label: "Mouse Click", color: "#ffd700", icon: "\ud83d\uddb1\ufe0f", defaultProps: { button: "left" } },
   { id: "shell_command", category: "action", label: "Shell Command", color: "#ffd700", icon: "\ud83d\udcbb", defaultProps: { command: "" } },
-  { id: "play_sound", category: "action", label: "Play Sound", color: "#ffd700", icon: "\ud83d\udd0a", defaultProps: { path: "", volume: 1.0 } },
+  { id: "volume", category: "action", label: "Volume", color: "#ffd700", icon: "\ud83d\udd0a", defaultProps: { update_interval_ms: 200, invert: false } },
+  { id: "brightness", category: "action", label: "Brightness", color: "#ffd700", icon: "\u2600\ufe0f", defaultProps: { update_interval_ms: 120, invert: false } },
+  { id: "scroll", category: "action", label: "Scroll", color: "#ffd700", icon: "\ud83d\uddb1\ufe0f", defaultProps: { direction: "vertical", update_interval_ms: 100 } },
+  { id: "zoom", category: "action", label: "Zoom", color: "#ffd700", icon: "\ud83d\udd0d", defaultProps: { update_interval_ms: 100 } },
+  { id: "play_sound", category: "action", label: "Play Sound", color: "#ffd700", icon: "\ud83c\udfa7", defaultProps: { path: "", volume: 1.0 } },
   { id: "notification", category: "action", label: "Notification", color: "#ffd700", icon: "\ud83d\udd14", defaultProps: { title: "", body: "" } },
   // Flow (blue)
   { id: "delay", category: "flow", label: "Delay", color: "#4488ff", icon: "\u23f1\ufe0f", defaultProps: { duration_ms: 100 } },

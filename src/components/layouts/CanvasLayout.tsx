@@ -26,14 +26,16 @@ export default function CanvasLayout({
       {/* Floating palette toggle (bottom-left) */}
       <button
         onClick={() => setShowPalette(!showPalette)}
-        className="absolute bottom-4 left-4 px-4 py-2 rounded-full bg-[#16213e] border border-green-400 text-green-400 text-xs font-medium hover:bg-[#1a2a4e] z-10"
+        className={`absolute bottom-4 left-4 px-4 py-2 bg-[#111125] border text-xs font-medium z-10 transition-all duration-200 active:scale-95 ${
+          showPalette ? "border-green-400 text-green-400 shadow-[0_0_12px_#00ff8820]" : "border-[#2a2a40] text-green-400/70 hover:border-green-400/50"
+        }`}
       >
         + Add Block
       </button>
 
       {/* Floating palette panel */}
       {showPalette && (
-        <div className="absolute bottom-14 left-4 w-56 max-h-80 bg-[#111125] border border-[#333] rounded-lg overflow-y-auto shadow-xl z-10">
+        <div className="absolute bottom-14 left-4 w-56 max-h-80 bg-[#0d0d22] border border-[#2a2a40] overflow-y-auto shadow-2xl z-10 animate-fade-in-up">
           {palette}
         </div>
       )}
@@ -41,13 +43,15 @@ export default function CanvasLayout({
       {/* Floating properties toggle (bottom-right) */}
       <button
         onClick={() => setShowProps(!showProps)}
-        className="absolute bottom-4 right-4 px-4 py-2 rounded-full bg-[#16213e] border border-[#aa66ff] text-[#aa66ff] text-xs font-medium hover:bg-[#1a2a4e] z-10"
+        className={`absolute bottom-4 right-4 px-4 py-2 bg-[#111125] border text-xs font-medium z-10 transition-all duration-200 active:scale-95 ${
+          showProps ? "border-[#aa66ff] text-[#aa66ff] shadow-[0_0_12px_#aa66ff20]" : "border-[#2a2a40] text-[#aa66ff]/70 hover:border-[#aa66ff]/50"
+        }`}
       >
         Properties
       </button>
 
       {showProps && (
-        <div className="absolute bottom-14 right-4 w-64 max-h-96 bg-[#111125] border border-[#333] rounded-lg overflow-y-auto shadow-xl z-10">
+        <div className="absolute bottom-14 right-4 w-64 max-h-96 bg-[#0d0d22] border border-[#2a2a40] overflow-y-auto shadow-2xl z-10 animate-fade-in-up">
           {properties}
         </div>
       )}

@@ -1,7 +1,7 @@
 import { ChildProcess, spawn } from "child_process";
 import path from "path";
 import { WebSocketServer, WebSocket } from "ws";
-import { BrowserWindow } from "electron";
+import { app, BrowserWindow } from "electron";
 
 const WS_PORT = 9150;
 
@@ -10,37 +10,54 @@ export class EngineManager {
   private wss: WebSocketServer | null = null;
   private engineSocket: WebSocket | null = null;
   private mainWindow: BrowserWindow | null = null;
-  private frameBuffer: Buffer = Buffer.alloc(0);
+  private starting = false;
 
   setWindow(win: BrowserWindow) {
     this.mainWindow = win;
   }
 
-  start() {
-    this.wss = new WebSocketServer({ port: WS_PORT });
-    this.wss.on("connection", (ws) => {
+  async start() {
+    if (this.starting || this.process) return;
+    this.starting = true;
+
+    await this.cleanup();
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        this.wss = new WebSocketServer({ port: WS_PORT }, () => resolve());
+        this.wss.on("error", (err) => reject(err));
+      });
+    } catch (err: any) {
+      console.error("[engine] Failed to start WS server:", err.message);
+      this.starting = false;
+      return;
+    }
+
+    this.wss!.on("connection", (ws) => {
+      console.log("[engine] Python connected via WebSocket");
       this.engineSocket = ws;
       ws.on("message", (data) => {
-        const msg = JSON.parse(data.toString());
-        this.mainWindow?.webContents.send("engine-event", msg);
+        try {
+          const msg = JSON.parse(data.toString());
+          this.mainWindow?.webContents.send("engine-event", msg);
+        } catch {}
       });
       ws.on("close", () => { this.engineSocket = null; });
     });
 
-    const engineDir = path.join(__dirname, "..", "engine");
+    const engineDir = app.isPackaged
+      ? path.join(path.dirname(app.getPath("exe")), "..", "Resources", "engine")
+      : path.join(__dirname, "..", "engine");
     const pythonPath = path.join(engineDir, ".venv", "bin", "python3");
 
+    console.log("[engine] Starting Python:", pythonPath);
+    // --show-camera: opens smooth OpenCV window directly (no IPC lag)
     this.process = spawn(pythonPath, [
-      "-m", "ws_bridge", "--ws-url", `ws://localhost:${WS_PORT}`,
+      "-m", "ws_bridge", "--ws-url", `ws://localhost:${WS_PORT}`, "--show-camera",
     ], {
       cwd: engineDir,
-      stdio: ["pipe", "pipe", "pipe"],
+      stdio: ["pipe", "ignore", "pipe"],
       env: { ...process.env, PYTHONPATH: engineDir },
-    });
-
-    this.process.stdout?.on("data", (chunk: Buffer) => {
-      this.frameBuffer = Buffer.concat([this.frameBuffer, chunk]);
-      this.processFrames();
     });
 
     this.process.stderr?.on("data", (data: Buffer) => {
@@ -48,21 +65,16 @@ export class EngineManager {
       if (text) console.log("[engine]", text);
     });
 
-    this.process.on("exit", (code) => {
-      console.log(`[engine] exited with code ${code}`);
+    this.process.on("exit", (code, signal) => {
+      console.log(`[engine] exited code=${code} signal=${signal}`);
+      this.process = null;
       this.engineSocket = null;
+      this.mainWindow?.webContents.send("engine-event", {
+        type: "status", running: false, fps: 0, hands: 0, enabled: false,
+      });
     });
-  }
 
-  private processFrames() {
-    while (this.frameBuffer.length >= 4) {
-      const frameLen = this.frameBuffer.readUInt32BE(0);
-      if (this.frameBuffer.length < 4 + frameLen) break;
-      const jpegData = this.frameBuffer.subarray(4, 4 + frameLen);
-      this.frameBuffer = this.frameBuffer.subarray(4 + frameLen);
-      const b64 = jpegData.toString("base64");
-      this.mainWindow?.webContents.send("video-frame", b64);
-    }
+    this.starting = false;
   }
 
   sendCommand(data: any) {
@@ -71,13 +83,24 @@ export class EngineManager {
     }
   }
 
-  stop() {
+  private cleanup(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.process) {
+        this.process.kill();
+        this.process = null;
+      }
+      this.engineSocket = null;
+      if (this.wss) {
+        this.wss.close(() => { this.wss = null; resolve(); });
+      } else {
+        resolve();
+      }
+    });
+  }
+
+  async stop() {
     this.sendCommand({ type: "command", action: "stop" });
-    setTimeout(() => {
-      this.process?.kill();
-      this.process = null;
-      this.wss?.close();
-      this.wss = null;
-    }, 1000);
+    await new Promise((r) => setTimeout(r, 500));
+    await this.cleanup();
   }
 }

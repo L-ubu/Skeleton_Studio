@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage } from "electron";
 import path from "path";
 import { EngineManager } from "./engine";
 
@@ -12,7 +12,7 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     backgroundColor: "#0a0a1a",
-    titleBarStyle: "hiddenInset",
+    icon: path.join(__dirname, "../build/icon.icns"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -27,11 +27,18 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist-renderer/index.html"));
   }
+
+  mainWindow.on("closed", () => { mainWindow = null; });
 }
 
 ipcMain.on("engine-command", (_e, data) => { engine.sendCommand(data); });
 ipcMain.handle("engine-start", () => engine.start());
-ipcMain.handle("engine-stop", () => engine.stop());
+ipcMain.handle("engine-stop", async () => engine.stop());
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  const base = app.isPackaged ? process.resourcesPath : path.join(__dirname, "..");
+  const iconPath = path.join(base, "build", "icon_1024.png");
+  app.dock?.setIcon(nativeImage.createFromPath(iconPath));
+  createWindow();
+});
 app.on("window-all-closed", () => { engine.stop(); app.quit(); });

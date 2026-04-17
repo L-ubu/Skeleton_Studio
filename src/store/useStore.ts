@@ -6,6 +6,54 @@ let blockCounter = 0;
 const nextChainId = () => `chain_${++chainCounter}`;
 const nextBlockId = () => `block_${++blockCounter}`;
 
+function makeBlock(definitionId: string, propsOverrides?: Record<string, any>): BlockInstance {
+  const def = BLOCK_DEFINITIONS.find((d) => d.id === definitionId);
+  return { id: nextBlockId(), definitionId, props: { ...def?.defaultProps, ...propsOverrides } };
+}
+
+function makeChain(name: string, blocks: BlockInstance[], enabled = true): Chain {
+  return { id: nextChainId(), name, blocks, enabled };
+}
+
+function buildDefaultChains(): Chain[] {
+  return [
+    makeChain("Screenshot", [
+      makeBlock("open_palm", { hand: "any", dwell_ms: 400, cooldown_ms: 2000 }),
+      makeBlock("keypress", { keys: "cmd+shift+3" }),
+    ]),
+    makeChain("Close Tab", [
+      makeBlock("fist", { hand: "any", dwell_ms: 400, cooldown_ms: 800 }),
+      makeBlock("keypress", { keys: "cmd+w" }),
+    ]),
+    makeChain("Select All + Copy", [
+      makeBlock("thumbs_up", { hand: "any", dwell_ms: 300, cooldown_ms: 500 }),
+      makeBlock("keypress", { keys: "cmd+a" }),
+      makeBlock("delay", { duration_ms: 100 }),
+      makeBlock("keypress", { keys: "cmd+c" }),
+    ]),
+    makeChain("Switch App", [
+      makeBlock("peace", { hand: "any", dwell_ms: 300, cooldown_ms: 500 }),
+      makeBlock("keypress", { keys: "cmd+tab" }),
+    ]),
+    makeChain("Click", [
+      makeBlock("point", { hand: "any", dwell_ms: 300, cooldown_ms: 500 }),
+      makeBlock("mouse_click", { button: "left" }),
+    ]),
+    makeChain("Play / Pause", [
+      makeBlock("rock", { hand: "any", dwell_ms: 300, cooldown_ms: 500 }),
+      makeBlock("keypress", { keys: "space" }),
+    ]),
+    makeChain("Brightness (Left Pinch)", [
+      makeBlock("pinch_distance", { hand: "left", smoothing: 0.3, dead_zone: 0.03, activation_ms: 800 }),
+      makeBlock("brightness", { update_interval_ms: 200, invert: false }),
+    ]),
+    makeChain("Volume (Right Pinch)", [
+      makeBlock("pinch_distance", { hand: "right", smoothing: 0.3, dead_zone: 0.03, activation_ms: 800 }),
+      makeBlock("volume", { update_interval_ms: 200, invert: false }),
+    ]),
+  ];
+}
+
 interface StudioState {
   layout: LayoutMode;
   setLayout: (mode: LayoutMode) => void;
@@ -21,8 +69,12 @@ interface StudioState {
   selectedBlockId: string | null;
   selectBlock: (chainId: string, blockId: string) => void;
   clearSelection: () => void;
+  engineStarting: boolean;
+  setEngineStarting: (v: boolean) => void;
   engineStatus: EngineStatus;
   setEngineStatus: (status: Partial<EngineStatus>) => void;
+  lastFiredGesture: string | null;
+  setLastFiredGesture: (gesture: string | null) => void;
   currentFrame: string | null;
   setCurrentFrame: (b64: string) => void;
   saveProject: () => void;
@@ -33,7 +85,7 @@ export const useStore = create<StudioState>((set) => ({
   layout: "scratch",
   setLayout: (mode) => set({ layout: mode }),
 
-  chains: [],
+  chains: buildDefaultChains(),
   addChain: () =>
     set((s) => ({
       chains: [...s.chains, { id: nextChainId(), blocks: [], enabled: true, name: "New Automation" }],
@@ -78,9 +130,14 @@ export const useStore = create<StudioState>((set) => ({
   selectBlock: (chainId, blockId) => set({ selectedChainId: chainId, selectedBlockId: blockId }),
   clearSelection: () => set({ selectedChainId: null, selectedBlockId: null }),
 
+  engineStarting: false,
+  setEngineStarting: (v) => set({ engineStarting: v }),
   engineStatus: { running: false, enabled: false, fps: 0, hands: 0, currentGesture: null, confidence: 0 },
   setEngineStatus: (status) =>
-    set((s) => ({ engineStatus: { ...s.engineStatus, ...status } })),
+    set((s) => ({ engineStatus: { ...s.engineStatus, ...status }, engineStarting: false })),
+
+  lastFiredGesture: null,
+  setLastFiredGesture: (gesture) => set({ lastFiredGesture: gesture }),
 
   currentFrame: null,
   setCurrentFrame: (b64) => set({ currentFrame: b64 }),
