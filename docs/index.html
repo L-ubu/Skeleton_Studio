@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skeleton Studio: visual gesture automation builder</title>
+    <meta
+      name="description"
+      content="Build gesture-powered automations with a drag-and-drop flow editor. Point your webcam, map hand gestures to actions, and control your Mac hands-free."
+    />
+    <meta property="og:title" content="Skeleton Studio: visual gesture automation builder" />
+    <meta
+      property="og:description"
+      content="Drag-and-drop flow editor powered by hand tracking: connect gesture triggers to keypresses, mouse control, shell commands and macros. Electron + React + MediaPipe."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://l-ubu.github.io/Skeleton_Studio/" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖐</text></svg>"
+    />
+    <style>
+      :root {
+        --bg: #0a0c10;
+        --bg-soft: #11151c;
+        --panel: #151a23;
+        --line: #232a36;
+        --text: #e6edf3;
+        --muted: #8b98a9;
+        --dim: #5c6773;
+        --accent: #38bdf8;
+        --accent-dim: #0ea5e9;
+        --green: #4ade80;
+        --red: #f87171;
+        --amber: #fbbf24;
+        --magenta: #e879f9;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(60rem 40rem at 50% -10rem, rgba(56, 189, 248, 0.09), transparent 70%),
+          linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 100% 4.5rem,
+          linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 4.5rem 100%;
+        opacity: 0.35;
+        mask-image: radial-gradient(70rem 50rem at 50% 0, #000 30%, transparent 75%);
+      }
+      .wrap { position: relative; max-width: 60rem; margin: 0 auto; padding: 0 1.5rem; }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      header { padding: 5.5rem 0 3.5rem; text-align: center; }
+      pre.logo {
+        font-family: var(--mono);
+        font-size: clamp(0.3rem, 1.25vw, 0.68rem);
+        line-height: 1.25;
+        color: var(--accent);
+        display: inline-block;
+        text-align: left;
+        margin: 0 auto 2rem;
+        overflow: hidden;
+        text-shadow: 0 0 1.5rem rgba(56, 189, 248, 0.35);
+      }
+      h1 { font-size: clamp(1.75rem, 4.5vw, 2.6rem); line-height: 1.2; margin: 0 0 0.9rem; letter-spacing: -0.02em; }
+      .tagline { color: var(--muted); font-size: 1.12rem; max-width: 38rem; margin: 0 auto 2.25rem; }
+      .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.25rem; }
+      .badge {
+        font-family: var(--mono); font-size: 0.72rem; padding: 0.28rem 0.6rem;
+        border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--bg-soft);
+      }
+      .badge b { color: var(--accent); font-weight: 600; }
+      .install {
+        display: flex; align-items: stretch; max-width: 34rem; margin: 0 auto 1rem;
+        border: 1px solid var(--line); border-radius: 0.6rem; background: var(--bg-soft); overflow: hidden;
+      }
+      .install code {
+        font-family: var(--mono); font-size: 0.82rem; padding: 0.85rem 1rem; flex: 1;
+        text-align: left; color: var(--text); white-space: nowrap; overflow-x: auto;
+      }
+      .install code .p { color: var(--accent); user-select: none; }
+      .install button {
+        font-family: var(--sans); font-size: 0.78rem; font-weight: 600; padding: 0 1.05rem;
+        border: 0; border-left: 1px solid var(--line); background: var(--panel); color: var(--muted);
+        cursor: pointer; transition: color 0.15s, background 0.15s;
+      }
+      .install button:hover { color: var(--accent); background: #1a212c; }
+      .install button.done { color: var(--accent); }
+      .hero-links { font-size: 0.9rem; color: var(--dim); }
+      .hero-links a { margin: 0 0.55rem; }
+      section { padding: 3.25rem 0; }
+      h2 { font-size: 1.35rem; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
+      h2 .n { font-family: var(--mono); color: var(--accent); font-size: 0.85rem; margin-right: 0.55rem; }
+      .lede { color: var(--muted); margin: 0 0 1.75rem; max-width: 42rem; }
+      .terminal {
+        border: 1px solid var(--line); border-radius: 0.7rem; background: #080a0e;
+        overflow: hidden; box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.5);
+      }
+      .tbar { display: flex; align-items: center; gap: 0.45rem; padding: 0.7rem 0.95rem; background: var(--panel); border-bottom: 1px solid var(--line); }
+      .dot { width: 0.68rem; height: 0.68rem; border-radius: 50%; background: #2c3441; }
+      .tbar span { margin-left: auto; font-family: var(--mono); font-size: 0.7rem; color: var(--dim); }
+      .terminal pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.75; margin: 0; padding: 1.15rem; overflow-x: auto; white-space: pre; }
+      .g { color: var(--green); } .r { color: var(--red); } .a { color: var(--amber); }
+      .c { color: var(--accent); } .d { color: var(--dim); } .m { color: var(--muted); }
+      .mg { color: var(--magenta); } .b { font-weight: 700; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr)); gap: 1rem; }
+      .card {
+        border: 1px solid var(--line); border-radius: 0.7rem;
+        background: linear-gradient(180deg, var(--bg-soft), rgba(17, 21, 28, 0.35));
+        padding: 1.35rem; transition: border-color 0.18s, transform 0.18s;
+      }
+      .card:hover { border-color: #33405280; transform: translateY(-2px); }
+      .card h3 { font-size: 0.94rem; margin: 0 0 0.5rem; display: flex; align-items: baseline; gap: 0.5rem; }
+      .card h3 i { font-family: var(--mono); font-style: normal; color: var(--accent); font-size: 0.85rem; }
+      .card p { margin: 0; font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+      th, td { text-align: left; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--line); }
+      th { color: var(--dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+      td code { font-family: var(--mono); font-size: 0.84rem; color: var(--accent); white-space: nowrap; }
+      td:last-child { color: var(--muted); }
+      .reason { border-left: 2px solid var(--line); padding: 0 0 0 1.15rem; margin-bottom: 1.6rem; }
+      .reason:hover { border-left-color: var(--accent-dim); }
+      .reason h3 { font-size: 0.98rem; margin: 0 0 0.35rem; }
+      .reason p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+      .reason code, .lede code, .card p code {
+        font-family: var(--mono); font-size: 0.85em; background: var(--panel);
+        padding: 0.1rem 0.32rem; border-radius: 0.25rem; color: var(--text);
+      }
+      footer { padding: 3rem 0 4rem; text-align: center; color: var(--dim); font-size: 0.86rem; border-top: 1px solid var(--line); margin-top: 2rem; }
+      @media (max-width: 40rem) {
+        body { font-size: 16px; }
+        header { padding: 3.5rem 0 2.5rem; }
+        .terminal pre { font-size: 0.68rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <pre class="logo" aria-label="Skeleton Studio">
+███████╗██╗  ██╗███████╗██╗     ███████╗████████╗ ██████╗ ███╗   ██╗
+██╔════╝██║ ██╔╝██╔════╝██║     ██╔════╝╚══██╔══╝██╔═══██╗████╗  ██║
+███████╗█████╔╝ █████╗  ██║     █████╗     ██║   ██║   ██║██╔██╗ ██║
+╚════██║██╔═██╗ ██╔══╝  ██║     ██╔══╝     ██║   ██║   ██║██║╚██╗██║
+███████║██║  ██╗███████╗███████╗███████╗   ██║   ╚██████╔╝██║ ╚████║
+╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝
+        ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+        ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+        ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+        ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+        ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+        ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝</pre>
+
+        <h1>Automations you build with your hands. Literally.</h1>
+        <p class="tagline">
+          A drag-and-drop flow editor powered by hand tracking. Connect gesture triggers to
+          keypresses, mouse control, shell commands and macros — then run your Mac hands-free.
+        </p>
+
+        <div class="badges">
+          <span class="badge">editor <b>drag &amp; drop</b></span>
+          <span class="badge">tracking <b>MediaPipe</b></span>
+          <span class="badge">hotkey <b>⌘⇧G global</b></span>
+          <span class="badge">Electron <b>+ React 19</b></span>
+          <span class="badge">MIT</span>
+        </div>
+
+        <div class="install">
+          <code id="cmd"><span class="p">$ </span>git clone https://github.com/L-ubu/Skeleton_Studio.git &amp;&amp; cd Skeleton_Studio &amp;&amp; npm install &amp;&amp; npm run dev</code>
+          <button id="copy" type="button">Copy</button>
+        </div>
+
+        <p class="hero-links">
+          <a href="https://github.com/L-ubu/Skeleton_Studio">GitHub</a>·
+          <a href="#flow">The flow</a>· <a href="#features">Features</a>·
+          <a href="#arch">Architecture</a>· <a href="#why">Why</a>
+        </p>
+      </header>
+
+      <section id="flow">
+        <h2><span class="n">01</span>Drag a trigger onto an action. Done.</h2>
+        <p class="lede">
+          The flow editor turns "when I do this gesture, do that thing" into a visual chain.
+          Changes sync live to the running engine — no restarts.
+        </p>
+
+        <div class="terminal">
+          <div class="tbar">
+            <i class="dot"></i><i class="dot"></i><i class="dot"></i><span>flow editor</span>
+          </div>
+          <pre>  <span class="c">┌──────────────┐</span>      <span class="a">┌──────────────┐</span>      <span class="mg">┌──────────────┐</span>
+  <span class="c">│</span>  <span class="c b">OPEN_PALM</span>    <span class="c">│</span>─────▶<span class="a">│</span>  <span class="a b">KEYPRESS</span>     <span class="a">│</span>─────▶<span class="mg">│</span>  <span class="mg b">SLACK: away</span>  <span class="mg">│</span>
+  <span class="c">│</span>  <span class="d">trigger</span>      <span class="c">│</span>      <span class="a">│</span>  <span class="d">cmd+tab</span>      <span class="a">│</span>      <span class="mg">│</span>  <span class="d">shell cmd</span>    <span class="mg">│</span>
+  <span class="c">└──────────────┘</span>      <span class="a">└──────────────┘</span>      <span class="mg">└──────────────┘</span>
+
+  <span class="g">● live</span>  <span class="d">confidence 0.95 · 30 fps · skeleton overlay on</span>
+
+  <span class="d">gesture detected:</span> <span class="c b">OPEN_PALM</span> <span class="d">→ chain fired in 12ms</span> <span class="g">✓</span></pre>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2><span class="n">02</span>What you get</h2>
+
+        <div class="grid">
+          <div class="card">
+            <h3><i>◆</i> Flow editor</h3>
+            <p>Drag-and-drop chains: gesture triggers wired to action blocks — keypress, mouse click, shell command, macro.</p>
+          </div>
+          <div class="card">
+            <h3><i>◆</i> Live camera feed</h3>
+            <p>Real-time hand skeleton overlay with gesture detection and per-frame confidence tracking.</p>
+          </div>
+          <div class="card">
+            <h3><i>◆</i> Skeleton-only mode</h3>
+            <p>Black out the camera feed and show only the hand skeleton with <code>S</code>. Privacy-friendly demos.</p>
+          </div>
+          <div class="card">
+            <h3><i>◆</i> Mouse mode</h3>
+            <p>Control your cursor with your hand via <code>M</code>. Yes, it feels like the future.</p>
+          </div>
+          <div class="card">
+            <h3><i>◆</i> Global hotkey</h3>
+            <p><code>Cmd+Shift+G</code> toggles gesture recognition system-wide — on for the demo, off for the typing.</p>
+          </div>
+          <div class="card">
+            <h3><i>◆</i> Save &amp; load projects</h3>
+            <p>Export gesture configurations, share them, import someone else's setup in one click.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="arch">
+        <h2><span class="n">03</span>Architecture</h2>
+        <p class="lede">Electron on top, Python underneath, WebSocket between.</p>
+
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>React UI</code></td><td>Flow editor, block palette, properties panel, webcam viewer</td></tr>
+            <tr><td><code>Electron main</code></td><td>Spawns the engine, hosts the WebSocket server on :9150</td></tr>
+            <tr><td><code>Python engine</code></td><td>MediaPipe + OpenCV — camera, tracking, action dispatch</td></tr>
+            <tr><td><code>Skeleton_Engine</code></td><td>The standalone CLI core this studio is built on</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="why">
+        <h2><span class="n">04</span>Why it exists</h2>
+        <p class="lede">The decisions worth knowing about, written down.</p>
+
+        <div class="reason">
+          <h3>Gesture control shouldn't need code</h3>
+          <p>The engine is powerful, but "edit a YAML and restart" kills the magic. The studio makes it a drag, a drop, and a wave of the hand.</p>
+        </div>
+        <div class="reason">
+          <h3>Live sync, no restarts</h3>
+          <p>Changes in the UI push instantly to the running engine over WebSocket. Tweak a threshold and test it in the same second.</p>
+        </div>
+        <div class="reason">
+          <h3>Built on a real engine</h3>
+          <p>Everything runs on <a href="https://github.com/L-ubu/Skeleton_Engine">Skeleton_Engine</a> — the CLI core. The studio is the friendly face, not a rewrite.</p>
+        </div>
+      </section>
+
+      <footer>
+        <p>MIT licensed · built by <a href="https://github.com/L-ubu">L-ubu</a> · wave at your Mac, it waves back</p>
+        <p><a href="https://github.com/L-ubu/Skeleton_Studio">github.com/L-ubu/Skeleton_Studio</a></p>
+      </footer>
+    </div>
+
+    <script>
+      const button = document.getElementById("copy");
+      button.addEventListener("click", async () => {
+        const command = "git clone https://github.com/L-ubu/Skeleton_Studio.git && cd Skeleton_Studio && npm install && npm run dev";
+        try {
+          await navigator.clipboard.writeText(command);
+        } catch {
+          const area = document.createElement("textarea");
+          area.value = command;
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        button.textContent = "Copied";
+        button.classList.add("done");
+        setTimeout(() => {
+          button.textContent = "Copy";
+          button.classList.remove("done");
+        }, 1800);
+      });
+    </script>
+  </body>
+</html>
